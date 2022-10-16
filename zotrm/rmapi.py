@@ -5,7 +5,7 @@ Utility functions to call rmapi.
 """
 import subprocess
 import os
-import re
+import json
 
 class RMAPI(object):
     def __init__(self, rmapi_path, verbose=False):
@@ -105,16 +105,17 @@ class RMAPI(object):
         if result.returncode != 0:
             raise Exception("Could not run stat, error: \n{:s}".format(result.stderr.decode('ascii')))
 
-        stat_res_str = result.stdout.split(b'\n')[1].decode('utf-8')
 
-        stat_regex = re.compile('[{|\s](\w+):(\S*)(?=[\s|}])')
-        match = stat_regex.findall(stat_res_str)
-        if len(match) < 1:
-            raise Exception("Could not parse result from stat: \n{:s}")
+        result_str = result.stdout.decode('utf-8')
+        dict_str = result_str[result_str.find('{'):]
+        stat_dict = json.loads(dict_str)
 
-        stat_dict = {}
-        for m in match:
-            stat_dict[m[0]] = m[1]
+        # if len(match) < 1:
+        #     raise Exception("Could not parse result from stat: \n{:s}")
+        #
+        # stat_dict = {}
+        # for m in match:
+        #     stat_dict[m[0]] = m[1]
 
         return stat_dict
 
