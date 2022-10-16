@@ -17,7 +17,7 @@ from rmapi import RMAPI
 import datetime
 import json
 import markdown
-
+import dateutil.parser
 
 def read_config():
     '''
@@ -44,8 +44,8 @@ def read_config():
     if 'BASE_DIR' in config['Remarkable']:
         d['rm_base_dir'] = config['Remarkable']['BASE_DIR']
     d['rm_default_dir'] = config['Remarkable']['DEFAULT_DIR']
-    if 'remarks' in config and 'REMARKS_PATH' in config['remarks']:
-        d['remarks_path'] = config['remarks']['REMARKS_PATH']
+    if 'Remarks' in config and 'REMARKS_PATH' in config['Remarks']:
+        d['remarks_path'] = config['Remarks']['REMARKS_PATH']
 
     return d
 
@@ -294,7 +294,7 @@ def extract_remarks(path, rmapi, config, outdir='./', metadata=None,
 
     # Run remarks
     remarks_cmd = "cd {:s} && ".format(config['remarks_path'])
-    remarks_cmd += "python -m remarks "
+    remarks_cmd += "python3 -m remarks "
     remarks_cmd += "'{:s}' '{:s}' ".format(temp_dir, annotate_dir)
     remarks_cmd += "-f "
     remarks_cmd += "--targets " + " ".join(targets) + " "
@@ -379,17 +379,17 @@ def backsync_papers(zot, rmapi, config, verbose=False, dry_run=False,
                 print("\tChecking modification date.")
             attachment_metadata = rmapi.stat(rm_path)
             last_modified_str = attachment_metadata['ModifiedClient']
-            # The UTC+0 timezone is sometimes denoted as Z, but this is
-            # not recognized by datetime:
-            # https://discuss.python.org/t/parse-z-timezone-suffix-in-datetime/2220/14
-            last_modified_str = last_modified_str.replace('Z', '')
-            # Zero-pad microseconds
-            frac_seconds = re.match('\d+-\d+-\d+T\d+:\d+:\d+.(\d+)',
-                                    attachment_metadata['ModifiedClient']).group(1)
-            if len(frac_seconds) < 6:
-                last_modified_str += ('0' * (6 - len(frac_seconds)))
-            last_modified_str += '+00:00'
-            rm_last_modified = datetime.datetime.fromisoformat(last_modified_str)
+            # # The UTC+0 timezone is sometimes denoted as Z, but this is
+            # # not recognized by datetime:
+            # # https://discuss.python.org/t/parse-z-timezone-suffix-in-datetime/2220/14
+            # last_modified_str = last_modified_str.replace('Z', '')
+            # # Zero-pad microseconds
+            # frac_seconds = re.match('\d+-\d+-\d+T\d+:\d+:\d+.(\d+)',
+            #                         attachment_metadata['ModifiedClient']).group(1)
+            # if len(frac_seconds) < 6:
+            #     last_modified_str += ('0' * (6 - len(frac_seconds)))
+            # last_modified_str += '+00:00'
+            rm_last_modified = dateutil.parser.isoparse(last_modified_str)
 
             # Check to see if annotated file exists in zotero
             zot_remarks_attachment = attachment.replace('.pdf', ' _remarks.pdf')
